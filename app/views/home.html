@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Membership Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function toggle(id) {
+            var element = document.getElementById(id);
+            element.style.display = (element.style.display === "none") ? "block" : "none";
+        }
+    </script>
+</head>
+<body>
+    <h2>Membership Management</h2>
+
+    <div>
+        <button onclick="toggle('box_add')">Add Member</button>
+        <button onclick="toggle('box_id')">Find by ID</button>
+        <button onclick="toggle('box_soc')">Find by Society</button>
+        <button onclick="toggle('box_update')">Update</button>
+        <button onclick="toggle('box_delete')">Delete</button>
+        <button onclick="toggle('box_sort')">Sort Results</button>
+        <button onclick="toggle('box_graph')">View Graph</button>
+    </div>
+
+    <hr>
+    {% if message %}<p><strong>{{ message }}</strong></p><hr>{% endif %}
+
+    <div id="box_add" style="display: none;">
+        <h3>Add New Member</h3>
+        <form method="post">
+            <input type="hidden" name="action" value="add">
+            <input name="first_name" placeholder="First Name" required>
+            <input name="last_name" placeholder="Last Name" required>
+            <label>Gender:</label>
+            <select name="gender">{% for g in genders %}<option>{{g}}</option>{% endfor %}</select>
+            <input name="student_id" placeholder="Student ID" required>
+            <label>Society:</label>
+            <select name="society">{% for s in societies %}<option>{{s}}</option>{% endfor %}</select>
+            <input type="date" name="date_joined" required>
+            <label>Position:</label>
+            <select name="position">{% for p in positions %}<option>{{p}}</option>{% endfor %}</select>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div id="box_id" style="display: none;">
+        <form method="post">
+            <input type="hidden" name="action" value="find_id">
+            <input name="student_id" placeholder="ID">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <div id="box_soc" style="display: none;">
+        <form method="post">
+            <input type="hidden" name="action" value="find_society">
+            <select name="society">{% for s in societies %}<option>{{s}}</option>{% endfor %}</select>
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <div id="box_update" style="display: none;">
+        <h3>Update Member Details</h3>
+        <form action="/update_member" method="post">
+            <p>Current Student ID: <input name="current_id" required></p>
+            <input name="new_student_id" placeholder="New ID">
+            <input name="first_name" placeholder="New First Name">
+            <input name="last_name" placeholder="New Last Name">
+            <label>New Position:</label>
+            <select name="position">
+                <option value="">-- No Change --</option>
+                {% for p in positions %}<option value="{{p}}">{{p}}</option>{% endfor %}
+            </select>
+            <button type="submit">Update Details</button>
+        </form>
+    </div>
+
+    <div id="box_delete" style="display: none;">
+        <form action="/delete_member" method="post">
+            <input name="student_id" placeholder="ID to Delete" required>
+            <button type="submit">Delete</button>
+        </form>
+    </div>
+
+    <div id="box_sort" style="display: none;">
+        <form action="/sort_results" method="post">
+            <select name="sort_by">
+                <option value="last_name">Last Name</option>
+                <option value="student_id">ID</option>
+                <option value="position">Position</option>
+            </select>
+            <select name="order">
+                <option value="asc">Asc</option>
+                <option value="desc">Desc</option>
+            </select>
+            <button type="submit">Sort Now</button>
+        </form>
+    </div>
+
+    <div id="box_graph" style="display: none;">
+        <div style="width: 500px; height: 300px;">
+            <canvas id="memberChart"></canvas>
+        </div>
+    </div>
+
+    {% if show_results %}
+    <div>
+        <h3>Member Results</h3>
+        <a href="/home"><button type="button">Close Table</button></a>
+    </div>
+
+    <table border="1">
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>ID</th>
+            <th>Society</th>
+            <th>Position</th>
+        </tr>
+        {% for r in results %}
+        <tr>
+            <td>{{r[1]}}</td>
+            <td>{{r[2]}}</td>
+            <td>{{r[4]}}</td>
+            <td>{{r[5]}}</td>
+            <td>{{r[7]}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <script>
+        fetch('/view_graph')
+        .then(r => r.json())
+        .then(data => {
+            const ctx = document.getElementById('memberChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Members',
+                        data: data.values,
+                        backgroundColor: 'purple'
+                    }]
+                }
+            });
+        });
+    </script>
+</body>
+</html>
